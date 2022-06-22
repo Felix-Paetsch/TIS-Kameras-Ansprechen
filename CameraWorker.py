@@ -12,17 +12,20 @@ ic = ctypes.cdll.LoadLibrary("./tisgrabber_x64.dll")
 tis.declareFunctions(ic)
 
 class CameraWorker:
-    def __init__(self, name, settings_path):
-        self.name = name #e.g. "DFK 33GP1300e 12220738"
+    def __init__(self, config_path):
+        with open(config_path, 'r') as file:
+            self.config = yaml.safe_load(file)
         
-        self.hGrabber = None
-        self.recording = False
-        self.codec = None
-        self.userdata = CallbackUserdata(name)
+        self.name = self.config["camera_name"]
+        self.cam_id = self.config["id"]
 
-        self.settings_path = settings_path
+        self.hGrabber = None
+        self.codec = None
         self.save_recording_start_timestamp = None
         self.thread = None
+        self.recording = False
+        
+        self.userdata = CallbackUserdata(self.name)    
         
     def list_properties(self):
         if self.is_connected():
@@ -33,27 +36,24 @@ class CameraWorker:
             self.stop_recording()
 
     def load_settings(self):
-        """ 
-        run 
-            > cam1.list_properties()
-        to see all properties & update the settings-file
-        for range set a List of 2 Numbers, for AbsoluteValue a Float in .yml
-        """
+        ic.IC_SetPropertyAbsoluteValue(self.hGrabber, "Gain".encode("utf-8"), "Value".encode("utf-8"), ctypes.c_float(self.config["camera_settings"]["gain"]))
 
-        with open(self.settings_path, 'r') as file:
-            data = yaml.safe_load(file)
+        if self.config["camera_settings"]["exposer"]["auto"]:
+            ic.IC_SetPropertySwitch(self.hGrabber, "Exposure".encode("utf-8"), "Auto".encode("utf-8"), 1)
+            ic.IC_SetPropertyAbsoluteValueRange(self.hGrabber, "Exposure".encode("utf-8"), "Value".encode("utf-8"), ctypes.c_float(self.config["camera_settings"]["exposer"]["auto_range"][0]), ctypes.c_float(self.config["camera_settings"]["exposer"]["auto_range"][1]))
+        else:
+            ic.IC_SetPropertySwitch(self.hGrabber, "Exposure".encode("utf-8"), "Auto".encode("utf-8"), 0)
+            if type(self.config["camera_settings"]["exposer"]["value"]) == "list":
+                ic.IC_SetPropertyAbsoluteValueRange(self.hGrabber, "Exposure".encode("utf-8"), "Value".encode("utf-8"), ctypes.c_float(self.config["camera_settings"]["exposer"]["value"][0]), ctypes.c_float(self.config["camera_settings"]["exposer"]["value"][1]))
+            else:
+                ic.IC_SetPropertyAbsoluteValue(self.hGrabber, "Exposure".encode("utf-8"), "Value".encode("utf-8"), ctypes.c_float(self.config["camera_settings"]["exposer"]["value"]))
 
-        for keyA in data:
-            for keyB in data[keyA]:
-                if type(data[keyA][keyB]) in [int, float]:
-                    ic.IC_SetPropertyAbsoluteValue(self.hGrabber, tis.T(keyA), tis.T(keyB),
-                        data[keyA][keyB])
+        ic.IC_SetVideoFormat(self.hGrabber, tis.T(self.config["camera_settings"]["video_format"]))
+        ic.IC_SetPropertyValue(self.hGrabber, tis.T("Partial scan"),
+                   tis.T("X Offset"), self.config["camera_settings"]["roi_offset"][0])
+        ic.IC_SetPropertyValue(self.hGrabber, tis.T("Partial scan"),
+                   tis.T("Y Offset"), self.config["camera_settings"]["roi_offset"][1])
 
-                elif type(data[keyA][keyB]) == list:
-                    ic.IC_SetPropertyAbsoluteValue(self.hGrabber, tis.T(keyA), tis.T(keyB),
-                        data[keyA][keyB][0], data[keyA][keyB][1])
-
-                # other cases?
 
     def connect(self):
         """
@@ -184,4 +184,5 @@ class CameraWorker:
         if(ic.IC_IsDevValid(self.hGrabber)):
             ic.IC_SetFrameReadyCallback(self.hGrabber, Callbackfuncptr, self.userdata)
             ic.IC_SetContinuousMode(self.hGrabber, 0)
+            self.recording = True
             return ic.IC_StartLive(self.hGrabber, 1) == tis.IC_SUCCESS

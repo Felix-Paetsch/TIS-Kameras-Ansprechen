@@ -1,0 +1,6 @@
+directory: "./test"
+file_prefix: "wha"
+start_index: 0
+time_format_string: "%H:%M:%S"
+file_type: "tiff"
+hz: .5
