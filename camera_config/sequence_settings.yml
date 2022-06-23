@@ -1,6 +1,6 @@
-directory: "./test"
-file_prefix: "wha"
+directory: "./out"
+file_prefix: "testRecording"
 start_index: 0
-time_format_string: "%H:%M:%S"
+time_format_string: "h%H_m%M_s%S_f%f"
 file_type: "tiff"
 hz: .5

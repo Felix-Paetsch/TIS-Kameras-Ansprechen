@@ -25,7 +25,7 @@ class CameraWorker:
         self.thread = None
         self.recording = False
         
-        self.userdata = CallbackUserdata(self.name)    
+        self.userdata = None 
         
     def list_properties(self):
         if self.is_connected():
@@ -59,12 +59,13 @@ class CameraWorker:
         """
             New hGrabber instance (reference to camera)
         """
+        self.userdata = CallbackUserdata(self.name)
         if self.is_connected():
             ic.IC_ReleaseGrabber(self.hGrabber)
 
         self.hGrabber = ic.IC_CreateGrabber()
+        ic.IC_OpenDevByUniqueName(self.hGrabber, tis.T(self.cam_id))
         self.load_settings()
-        ic.IC_OpenDevByUniqueName(self.hGrabber, tis.T(self.name))
         return ic.IC_IsDevValid(self.hGrabber) == 1
         
     def is_connected(self):
@@ -179,6 +180,10 @@ class CameraWorker:
             ic.IC_Codec_Release(self.codec)
             
         self.recording = False
+
+    def set_start_timestamp(self, ts):
+        self.userdata.start_timestamp = ts
+        self.userdata.last_saved = 0
 
     def start_with_callback(self, Callbackfuncptr):
         if(ic.IC_IsDevValid(self.hGrabber)):
