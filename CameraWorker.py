@@ -38,21 +38,41 @@ class CameraWorker:
     def load_settings(self):
         ic.IC_SetPropertyAbsoluteValue(self.hGrabber, "Gain".encode("utf-8"), "Value".encode("utf-8"), ctypes.c_float(self.config["camera_settings"]["gain"]))
 
-        if self.config["camera_settings"]["exposer"]["auto"]:
+        if self.config["camera_settings"]["exposure"]["auto"]:
             ic.IC_SetPropertySwitch(self.hGrabber, "Exposure".encode("utf-8"), "Auto".encode("utf-8"), 1)
-            ic.IC_SetPropertyAbsoluteValueRange(self.hGrabber, "Exposure".encode("utf-8"), "Value".encode("utf-8"), ctypes.c_float(self.config["camera_settings"]["exposer"]["auto_range"][0]), ctypes.c_float(self.config["camera_settings"]["exposer"]["auto_range"][1]))
+            if (ic.IC_SetPropertyAbsoluteValueRange(self.hGrabber, "Exposure".encode("utf-8"), "Value".encode("utf-8"), ctypes.c_float(self.config["camera_settings"]["exposure"]["auto_range"][0]), ctypes.c_float(self.config["camera_settings"]["exposure"]["auto_range"][1])) == 0):
+                print(f'Invalid exposure.auto_range { self.config["camera_settings"]["video_format_str"] } for camera { self.name }')
+                return False
+            
         else:
             ic.IC_SetPropertySwitch(self.hGrabber, "Exposure".encode("utf-8"), "Auto".encode("utf-8"), 0)
-            if type(self.config["camera_settings"]["exposer"]["value"]) == "list":
-                ic.IC_SetPropertyAbsoluteValueRange(self.hGrabber, "Exposure".encode("utf-8"), "Value".encode("utf-8"), ctypes.c_float(self.config["camera_settings"]["exposer"]["value"][0]), ctypes.c_float(self.config["camera_settings"]["exposer"]["value"][1]))
+            if type(self.config["camera_settings"]["exposure"]["value"]) == "list":
+                if (ic.IC_SetPropertyAbsoluteValueRange(self.hGrabber, "Exposure".encode("utf-8"), "Value".encode("utf-8"), ctypes.c_float(self.config["camera_settings"]["exposure"]["value"][0]), ctypes.c_float(self.config["camera_settings"]["exposure"]["value"][1])) == 0):
+                    print(f'Invalid exposer.value(range) for camera { self.name }')
+                    return False
             else:
-                ic.IC_SetPropertyAbsoluteValue(self.hGrabber, "Exposure".encode("utf-8"), "Value".encode("utf-8"), ctypes.c_float(self.config["camera_settings"]["exposer"]["value"]))
+                if (ic.IC_SetPropertyAbsoluteValue(self.hGrabber, "Exposure".encode("utf-8"), "Value".encode("utf-8"), ctypes.c_float(self.config["camera_settings"]["exposure"]["value"]))== 0):
+                    rint(f'Invalid exposer.value(range) for camera { self.name }')
+                    return False
+                
 
-        ic.IC_SetVideoFormat(self.hGrabber, tis.T(self.config["camera_settings"]["video_format"]))
-        ic.IC_SetPropertyValue(self.hGrabber, tis.T("Partial scan"),
-                   tis.T("X Offset"), self.config["camera_settings"]["roi_offset"][0])
-        ic.IC_SetPropertyValue(self.hGrabber, tis.T("Partial scan"),
-                   tis.T("Y Offset"), self.config["camera_settings"]["roi_offset"][1])
+        if (ic.IC_SetVideoFormat(self.hGrabber, tis.T(self.config["camera_settings"]["video_format_str"])) == 0):
+            print(f'Invalid video format { self.config["camera_settings"]["video_format_str"] } for camera { self.name }')
+            return False
+
+        if (ic.IC_SetVideoFormat(self.hGrabber, tis.T(self.config["camera_settings"]["video_format_str"])) == 0):
+            print(f'Invalid video format { self.config["camera_settings"]["video_format_str"] } for camera { self.name }')
+            return False
+
+        if (ic.IC_SetPropertyValue(self.hGrabber, tis.T("Partial scan"),
+                   tis.T("X Offset"), self.config["camera_settings"]["roi_offset"][0]) == 0):
+            print(f'Invalid roi[0] (x-offset) for camera { self.name }')
+            return False
+
+        if (ic.IC_SetPropertyValue(self.hGrabber, tis.T("Partial scan"),
+                   tis.T("Y Offset"), self.config["camera_settings"]["roi_offset"][1]) == 0):
+            print(f'Invalid roi[1] (y-offset) for camera { self.name }')
+            return False
 
 
     def connect(self):
@@ -65,7 +85,8 @@ class CameraWorker:
 
         self.hGrabber = ic.IC_CreateGrabber()
         ic.IC_OpenDevByUniqueName(self.hGrabber, tis.T(self.cam_id))
-        self.load_settings()
+        if not self.load_settings():
+            return False
         return ic.IC_IsDevValid(self.hGrabber) == 1
         
     def is_connected(self):
