@@ -37,7 +37,7 @@ Every .yml file in `./camera_config` which is not `sequence_settings.yml` is exp
   - `exposure`:
     - `auto`: Whether to automatically adjust exposure
     - `value`: Exposure value if `auto` is set to false. This can eigther be a float or a range. Specify the latter like `[min, max]`.
-    - auto_range: Range in which to automatically adjust `[min, max]`
+    - `auto_range`: Range in which to automatically adjust `[min, max]`
   - `video_format_str`: Something like `"RGB32 (640x480)"`. See IC Capture for all possible pixel_formats of your device. Specify the width and height in the brackets. Usually both of them have to be devisible by 4, sometimes by 8. 
   - `roi_offset`: Offset of top-left-corner if the viewport is smaller than the possible maximum. `[x_offset, y_offset]`
 
