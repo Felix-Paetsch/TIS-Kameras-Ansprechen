@@ -3,4 +3,5 @@ See [this repo](https://github.com/TheImagingSource/IC-Imaging-Control-Samples/t
 Requirements (probably not complete?)
 ---------
 pyyaml<br>
-numpy
+numpy<br>
+Pillow
