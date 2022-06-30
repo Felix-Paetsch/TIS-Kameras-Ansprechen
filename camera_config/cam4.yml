@@ -1,0 +1,11 @@
+id: DMK 33GX264e 10220425
+camera_name: cam_name4
+camera_settings:
+  gain: 0
+  exposure:
+    auto: false
+    value: 100 # Or [min, max]
+    auto_range: [90, 100]
+  video_format_str: "Y16 (640x480)"               # Format: fourcc, whitespace, roi_size and if wanted another whitespace an then "[Skipping 2x]" or "[Binning 2x]""
+  roi_offset: [0, 0]
+

@@ -1,0 +1,11 @@
+id: DFK 33GP1300e 12220739
+camera_name: cam_name2
+camera_settings:
+  gain: 0
+  exposure:
+    auto: false
+    value: 100 # Or [min, max]
+    auto_range: [90, 100]
+  video_format_str: "RGB32 (640x480)"               # Format: fourcc, whitespace, roi_size and if wanted another whitespace an then "[Skipping 2x]" or "[Binning 2x]""
+  roi_offset: [0, 0]
+

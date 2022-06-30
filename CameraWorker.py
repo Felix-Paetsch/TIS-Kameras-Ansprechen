@@ -16,6 +16,7 @@ class CameraWorker:
         with open(config_path, 'r') as file:
             self.config = yaml.safe_load(file)
         
+        self.config_path = config_path
         self.name = self.config["camera_name"]
         self.cam_id = self.config["id"]
 
@@ -36,6 +37,11 @@ class CameraWorker:
             self.stop_recording()
 
     def load_settings(self):
+        with open(self.config_path, 'r') as file:
+            self.config = yaml.safe_load(file)
+        
+        self.name = self.config["camera_name"]
+
         ic.IC_SetPropertyAbsoluteValue(self.hGrabber, "Gain".encode("utf-8"), "Value".encode("utf-8"), ctypes.c_float(self.config["camera_settings"]["gain"]))
 
         if self.config["camera_settings"]["exposure"]["auto"]:
@@ -73,6 +79,8 @@ class CameraWorker:
                    tis.T("Y Offset"), self.config["camera_settings"]["roi_offset"][1]) == 0):
             print(f'Invalid roi[1] (y-offset) for camera { self.name }')
             return False
+
+        return True
 
 
     def connect(self):
